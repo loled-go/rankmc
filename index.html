@@ -1,0 +1,658 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>RANK MC</title>
+  <style>
+    :root {
+      --bg: #08090d;
+      --panel: #11131a;
+      --panel2: #171a23;
+      --line: #292d39;
+      --text: #f7f8fb;
+      --muted: #9299aa;
+      --accent: #ff4141;
+      --gold: #ffd04a;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at 50% -15%, #2a151b 0, #0d0e13 38%, var(--bg) 72%);
+      color: var(--text);
+      font-family: "Arial Narrow", "Roboto Condensed", "Inter Tight", Impact, Arial, sans-serif;
+      letter-spacing: .02em;
+    }
+    .wrap {
+      width: min(1120px, 94%);
+      margin: auto;
+      padding: 38px 0 70px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .brand {
+      font-size: clamp(27px, 5vw, 46px);
+      font-weight: 900;
+      font-style: italic;
+      text-transform: uppercase;
+    }
+    .brand span {
+      color: var(--accent);
+    }
+    .sub, .note {
+      font: 13px Arial, sans-serif;
+      color: var(--muted);
+    }
+    button, input, select {
+      font: inherit;
+    }
+    .btn {
+      border: 1px solid #383d4b;
+      background: #191c25;
+      color: #fff;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .btn:hover {
+      border-color: var(--accent);
+    }
+    .btn.red {
+      background: #2a1216;
+      color: #ff8a8a;
+    }
+    .btn.good {
+      background: #14251b;
+      color: #8cf0ac;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 14px;
+    }
+    .ownerbar {
+      display: none;
+      border: 1px solid #3b2b31;
+      background: #151014;
+      padding: 14px;
+      border-radius: 12px;
+      margin-bottom: 14px;
+    }
+    .editing .ownerbar {
+      display: block;
+    }
+    .ownerbar h3 {
+      margin: 0 0 10px;
+      text-transform: uppercase;
+      font-size: 15px;
+    }
+    .addgrid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr .65fr .65fr .7fr auto;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    input, select {
+      background: #0b0d12;
+      border: 1px solid #323744;
+      color: #fff;
+      padding: 10px;
+      border-radius: 7px;
+      outline: none;
+    }
+    input:focus, select:focus {
+      border-color: var(--accent);
+    }
+    .panel {
+      background: rgba(17, 19, 26, .95);
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      overflow: hidden;
+      box-shadow: 0 25px 70px #0008;
+    }
+    .panelhead {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+    .panelhead h2 {
+      margin: 0;
+      font-size: 18px;
+      text-transform: uppercase;
+    }
+    .badge {
+      font: 700 11px Arial, sans-serif;
+      border: 1px solid #ff414155;
+      background: #ff414115;
+      color: #ff7d7d;
+      border-radius: 999px;
+      padding: 5px 9px;
+    }
+    .search {
+      width: min(270px, 100%);
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 65px minmax(150px, 1.5fr) 100px 85px 85px 85px 90px;
+      gap: 10px;
+      align-items: center;
+      padding: 15px 18px;
+      border-bottom: 1px solid #222631;
+    }
+    .row.head {
+      background: #0d0f14;
+      padding-top: 10px;
+      padding-bottom: 10px;
+      color: #7f8798;
+      font: 700 11px Arial, sans-serif;
+      text-transform: uppercase;
+    }
+    .rank {
+      font-size: 23px;
+      font-weight: 900;
+      color: #707788;
+    }
+    .top1 {
+      color: var(--gold);
+    }
+    .top2 {
+      color: #dce0e8;
+    }
+    .top3 {
+      color: #d68e55;
+    }
+    .player {
+      font-size: 18px;
+      font-weight: 900;
+    }
+    .tier {
+      font: 800 12px Arial, sans-serif;
+      color: #ff7474;
+    }
+    .num {
+      font-weight: 900;
+    }
+    .actions {
+      display: none;
+      gap: 5px;
+    }
+    .editing .row.head::after {
+      content: "Actions";
+      display: block;
+    }
+    .editing .row.head {
+      grid-template-columns: 65px minmax(150px, 1.5fr) 100px 75px 75px 75px 80px 145px;
+    }
+    .editing .row:not(.head) {
+      grid-template-columns: 65px minmax(150px, 1.5fr) 100px 75px 75px 75px 80px 145px;
+    }
+    .editing .actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .editing .pointsView {
+      display: block;
+    }
+    .icon {
+      border: 1px solid #383d49;
+      background: #171a22;
+      color: #ddd;
+      border-radius: 6px;
+      padding: 7px;
+      cursor: pointer;
+    }
+    .danger {
+      color: #ff7676;
+    }
+    .empty {
+      text-align: center;
+      padding: 42px;
+      color: var(--muted);
+      font-family: Arial, sans-serif;
+    }
+    .note {
+      text-align: center;
+      margin-top: 14px;
+    }
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: #000c;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      z-index: 20;
+    }
+    .modal.show {
+      display: grid;
+    }
+    .box {
+      width: min(460px, 100%);
+      background: #12151c;
+      border: 1px solid #343947;
+      border-radius: 13px;
+      padding: 22px;
+    }
+    .box h3 {
+      margin: 0 0 8px;
+      text-transform: uppercase;
+    }
+    .box p {
+      font: 13px Arial, sans-serif;
+      color: var(--muted);
+    }
+    .box input {
+      width: 100%;
+      margin: 6px 0 10px;
+    }
+    .error {
+      min-height: 17px;
+      color: #ff6f6f;
+      font: 12px Arial, sans-serif;
+    }
+    .editgrid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .editgrid label {
+      font: 11px Arial, sans-serif;
+      color: var(--muted);
+    }
+    .editgrid label input {
+      display: block;
+      width: 100%;
+      margin-top: 4px;
+    }
+    .editgrid .wide {
+      grid-column: 1/-1;
+    }
+    .hidden {
+      display: none !important;
+    }
+    @media (max-width: 760px) {
+      header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .ownerbar {
+        overflow: hidden;
+      }
+      .addgrid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .addgrid .btn {
+        grid-column: 1/-1;
+      }
+      .toolbar .btn {
+        flex: 1 1 140px;
+      }
+      .panel {
+        overflow-x: auto;
+      }
+      .panelhead {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .search {
+        width: 100%;
+      }
+      .row {
+        min-width: 590px;
+        grid-template-columns: 52px minmax(145px, 1.4fr) 85px 70px 70px 70px 75px;
+      }
+      .editing .row.head,
+      .editing .row:not(.head) {
+        min-width: 720px;
+        grid-template-columns: 52px minmax(145px, 1.4fr) 85px 70px 70px 70px 75px 130px;
+      }
+    }
+    @media (max-width: 480px) {
+      .wrap {
+        width: 96%;
+        padding-top: 20px;
+      }
+      .addgrid {
+        grid-template-columns: 1fr;
+      }
+      .addgrid .btn {
+        grid-column: auto;
+      }
+      .box {
+        padding: 16px;
+      }
+      .editgrid {
+        grid-template-columns: 1fr;
+      }
+      .editgrid .wide {
+        grid-column: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header>
+    <div>
+      <div class="brand" id="brand">FRIEND <span>PVP</span> RANKINGS</div>
+      <div class="sub">Private friend-group leaderboard • PvP-inspired competitive UI</div>
+    </div>
+    <button class="btn" id="ownerBtn">Owner Mode</button>
+  </header>
+  <div class="ownerbar">
+    <h3>Owner Control Panel</h3>
+    <div class="addgrid">
+      <input id="name" placeholder="Player name">
+      <input id="tier" placeholder="Tier (HT3, LT2...)">
+      <input id="wins" type="number" min="0" placeholder="Wins">
+      <input id="losses" type="number" min="0" placeholder="Losses">
+      <input id="points" type="number" min="0" placeholder="Points">
+      <button class="btn good" id="addBtn">Add Player</button>
+    </div>
+    <div class="toolbar">
+      <button class="btn" id="titleBtn">Change Title</button>
+      <button class="btn" id="exportBtn">Export Data</button>
+      <button class="btn" id="importBtn">Import Data</button>
+      <button class="btn" id="resetBtn">Reset Defaults</button>
+      <button class="btn red" id="clearBtn">Delete All</button>
+      <button class="btn" id="lockBtn">Lock Owner Mode</button>
+      <input class="hidden" type="file" id="fileInput" accept="application/json">
+    </div>
+  </div>
+  <section class="panel">
+    <div class="panelhead">
+      <h2>Top Players</h2>
+      <input class="search" id="search" placeholder="Search player...">
+      <span class="badge" id="status">PUBLIC VIEW</span>
+    </div>
+    <div class="row head">
+      <div>Rank</div>
+      <div>Player</div>
+      <div>Tier</div>
+      <div>Wins</div>
+      <div>Losses</div>
+      <div>K/D</div>
+      <div>Points</div>
+    </div>
+    <div id="list"></div>
+  </section>
+  <div class="note">Ranked automatically by points • leaderboard data is stored in this browser</div>
+</div>
+
+<div class="modal" id="loginModal">
+  <div class="box">
+    <h3>Owner Access</h3>
+    <p>Enter the owner code to unlock all management controls.</p>
+    <input id="code" type="password" placeholder="Owner code" autocomplete="off">
+    <div class="error" id="error"></div>
+    <div class="toolbar">
+      <button class="btn good" id="unlock">Unlock</button>
+      <button class="btn" id="cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="editModal">
+  <div class="box">
+    <h3>Edit Player</h3>
+    <div class="editgrid">
+      <label class="wide">Player name<input id="eName"></label>
+      <label>Tier<input id="eTier"></label>
+      <label>Points<input id="ePoints" type="number" min="0"></label>
+      <label>Wins<input id="eWins" type="number" min="0"></label>
+      <label>Losses<input id="eLosses" type="number" min="0"></label>
+    </div>
+    <div class="toolbar" style="margin-top:12px">
+      <button class="btn good" id="saveEdit">Save Changes</button>
+      <button class="btn" id="cancelEdit">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const OWNER_CODE = 'shantak26';
+  const defaults = [
+    { name: 'Shantia', tier: 'HT2', wins: 28, losses: 6, points: 1460 },
+    { name: 'PlayerTwo', tier: 'LT2', wins: 22, losses: 9, points: 1290 },
+    { name: 'PlayerThree', tier: 'HT3', wins: 18, losses: 11, points: 1135 }
+  ];
+
+  const $ = id => document.getElementById(id);
+  let players = load();
+  let editing = false, editId = null;
+  let siteTitle = localStorage.getItem('friendPvpTitle') || 'FRIEND PVP RANKINGS';
+
+  function load() {
+    try {
+      return JSON.parse(localStorage.getItem('friendPvpPlayers')) || JSON.parse(JSON.stringify(defaults));
+    } catch {
+      return JSON.parse(JSON.stringify(defaults));
+    }
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, m => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[m]));
+  }
+
+  function persist() {
+    localStorage.setItem('friendPvpPlayers', JSON.stringify(players));
+    render();
+  }
+
+  function setTitle(t) {
+    siteTitle = t || 'FRIEND PVP RANKINGS';
+    localStorage.setItem('friendPvpTitle', siteTitle);
+    $('brand').innerHTML = esc(siteTitle).replace(/PVP/i, '<span>PVP</span>');
+  }
+
+  function render() {
+    setTitle(siteTitle);
+    const q = $('search').value.trim().toLowerCase();
+    const sorted = [...players].sort((a, b) => (+b.points || 0) - (+a.points || 0));
+    const shown = sorted.filter(p =>
+      p.name.toLowerCase().includes(q) || String(p.tier).toLowerCase().includes(q)
+    );
+
+    $('list').innerHTML = shown.length ? shown.map(p => {
+      const original = players.indexOf(p);
+      const rank = sorted.indexOf(p) + 1;
+      const kd = (+p.losses || 0) ? ((+p.wins || 0) / (+p.losses)).toFixed(2) : (+p.wins || 0).toFixed(2);
+      return `<div class="row">
+        <div class="rank ${rank <= 3 ? 'top' + rank : ''}">#${rank}</div>
+        <div class="player">${esc(p.name)}</div>
+        <div class="tier">${esc(p.tier || 'Unranked')}</div>
+        <div class="num">${+p.wins || 0}</div>
+        <div class="num">${+p.losses || 0}</div>
+        <div class="num">${kd}</div>
+        <div class="pointsView num">${+p.points || 0}</div>
+        <div class="actions">
+          <button class="icon" onclick="openEdit(${original})">Edit</button>
+          <button class="icon danger" onclick="removePlayer(${original})">Delete</button>
+        </div>
+      </div>`;
+    }).join('') : '<div class="empty">No matching players.</div>';
+  }
+
+  function lock() {
+    editing = false;
+    $('app').classList.remove('editing');
+    $('status').textContent = 'PUBLIC VIEW';
+    $('ownerBtn').textContent = 'Owner Mode';
+  }
+
+  $('ownerBtn').onclick = () => {
+    if (editing) lock();
+    else {
+      $('loginModal').classList.add('show');
+      $('code').focus();
+    }
+  };
+
+  $('lockBtn').onclick = lock;
+
+  $('cancel').onclick = () => {
+    $('loginModal').classList.remove('show');
+    $('code').value = '';
+    $('error').textContent = '';
+  };
+
+  function unlock() {
+    if ($('code').value === OWNER_CODE) {
+      editing = true;
+      $('app').classList.add('editing');
+      $('status').textContent = 'OWNER EDITING';
+      $('ownerBtn').textContent = 'Lock Editing';
+      $('loginModal').classList.remove('show');
+      $('code').value = '';
+      $('error').textContent = '';
+    } else {
+      $('error').textContent = 'Incorrect owner code.';
+    }
+  }
+
+  $('unlock').onclick = unlock;
+  $('code').onkeydown = e => { if (e.key === 'Enter') unlock(); };
+
+  $('search').oninput = render;
+
+  $('addBtn').onclick = () => {
+    if (!editing) return;
+    const name = $('name').value.trim();
+    if (!name) return alert('Enter a player name.');
+    players.push({
+      name,
+      tier: $('tier').value.trim() || 'Unranked',
+      wins: Math.max(0, +$('wins').value || 0),
+      losses: Math.max(0, +$('losses').value || 0),
+      points: Math.max(0, +$('points').value || 0)
+    });
+    ['name', 'tier', 'wins', 'losses', 'points'].forEach(id => $(id).value = '');
+    persist();
+  };
+
+  window.removePlayer = i => {
+    if (editing && confirm(`Delete ${players[i].name}?`)) {
+      players.splice(i, 1);
+      persist();
+    }
+  };
+
+  window.openEdit = i => {
+    if (!editing) return;
+    editId = i;
+    const p = players[i];
+    $('eName').value = p.name;
+    $('eTier').value = p.tier;
+    $('eWins').value = p.wins;
+    $('eLosses').value = p.losses || 0;
+    $('ePoints').value = p.points;
+    $('editModal').classList.add('show');
+  };
+
+  $('cancelEdit').onclick = () => {
+    $('editModal').classList.remove('show');
+    editId = null;
+  };
+
+  $('saveEdit').onclick = () => {
+    if (!editing || editId === null) return;
+    const n = $('eName').value.trim();
+    if (!n) return alert('Player name cannot be empty.');
+    players[editId] = {
+      name: n,
+      tier: $('eTier').value.trim() || 'Unranked',
+      wins: Math.max(0, +$('eWins').value || 0),
+      losses: Math.max(0, +$('eLosses').value || 0),
+      points: Math.max(0, +$('ePoints').value || 0)
+    };
+    $('editModal').classList.remove('show');
+    editId = null;
+    persist();
+  };
+
+  $('titleBtn').onclick = () => {
+    if (!editing) return;
+    const t = prompt('Leaderboard title:', siteTitle);
+    if (t !== null && t.trim()) {
+      siteTitle = t.trim();
+      setTitle(siteTitle);
+    }
+  };
+
+  $('clearBtn').onclick = () => {
+    if (editing && confirm('Delete ALL players? This cannot be undone.')) {
+      players = [];
+      persist();
+    }
+  };
+
+  $('resetBtn').onclick = () => {
+    if (editing && confirm('Reset the leaderboard to the default players?')) {
+      players = JSON.parse(JSON.stringify(defaults));
+      persist();
+    }
+  };
+
+  $('exportBtn').onclick = () => {
+    if (!editing) return;
+    const blob = new Blob([JSON.stringify({ title: siteTitle, players }, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'pvp-leaderboard-backup.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  $('importBtn').onclick = () => {
+    if (editing) $('fileInput').click();
+  };
+
+  $('fileInput').onchange = e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const d = JSON.parse(r.result);
+        if (!Array.isArray(d.players)) throw 0;
+        players = d.players.map(p => ({
+          name: String(p.name || 'Player'),
+          tier: String(p.tier || 'Unranked'),
+          wins: Math.max(0, +p.wins || 0),
+          losses: Math.max(0, +p.losses || 0),
+          points: Math.max(0, +p.points || 0)
+        }));
+        if (d.title) siteTitle = String(d.title);
+        persist();
+      } catch {
+        alert('Invalid leaderboard backup file.');
+      }
+    };
+    r.readAsText(f);
+    e.target.value = '';
+  };
+
+  render();
+</script>
+</body>
+  </html>
